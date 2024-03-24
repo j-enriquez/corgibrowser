@@ -35,7 +35,6 @@ PipLibrary*
 build/
 corgibrowser.egg-info/
 
-
 # Local python packages
 .python_packages/
 
