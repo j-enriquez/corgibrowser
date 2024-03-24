@@ -29,6 +29,12 @@ dist
 ../CorgiWebsite/personal/
 user_analytics/
 .idea/
+PyPI*
+PipLibrary*
+.pypirc
+build/
+corgibrowser.egg-info/
+
 
 # Local python packages
 .python_packages/
