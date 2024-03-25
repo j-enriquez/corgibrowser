@@ -34,6 +34,7 @@ PipLibrary*
 .pypirc
 build/
 corgibrowser.egg-info/
+user/joseenriquez*
 
 # Local python packages
 .python_packages/

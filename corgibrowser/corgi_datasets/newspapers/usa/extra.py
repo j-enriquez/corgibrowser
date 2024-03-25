@@ -1,4 +1,4 @@
-new_urls = [
+urls = [
 "https://abcnews.go.com/",
         "https://archive.azcentral.com/arizonarepublic/",
         "https://www.ajc.com/",

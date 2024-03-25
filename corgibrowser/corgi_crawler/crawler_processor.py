@@ -1,13 +1,18 @@
+import asyncio
+import time
+
+import aiohttp
 import requests
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 
 from corgibrowser.corgi_cloud_integration.queues_schemas.corgi_web_queue_version_1 import CorgiWebMessageSchemaVersion1
+from corgibrowser.corgi_utils.AsyncRequests import AsyncRequests
+from corgibrowser.corgi_utils.SyncRequests import SyncRequests
 from corgibrowser.corgi_utils.names_generator import CorgiNameGenerator
 
-
 class CrawlerProcessor:
-    def __init__(self, cloud_integration, visited_urls, crawler_settings=None):
+    def __init__(self, cloud_integration, visited_urls, instance_id, crawler_settings=None):
         self.crawler_settings = crawler_settings
         self.cloud_integration = cloud_integration
 
@@ -21,8 +26,9 @@ class CrawlerProcessor:
         self.constraint = ""
 
         self.initialized = False
+        self.instance_id = instance_id
 
-    def initialize(self, json_message,domain,robotsCache):
+    def initialize(self, json_message, domain, robotsCache):
         self.constraint = None
         self.robotsCache = robotsCache
         self.json_message = json_message
@@ -32,28 +38,29 @@ class CrawlerProcessor:
 
         print("     CrawlerProcessor: Initialized")
 
-    def start(self,):
+    async def start(self,):
 
         if not self.initialized:
             print("     CrawlerProcessor: ERROR - Not Initialized" )
 
-        self.process_url(self.json_message.toVisitUrl)
+        await self.process_url(self.json_message.toVisitUrl)
 
         print("     CrawlerProcessor: Completed")
 
-    def process_url(self, url):
+    async def process_url(self, url):
         self.url = url
         """Process a single URL."""
         print(f"     CrawlerProcessor: Processing Url{self.url}")
 
         if not self.is_allowed_by_robots(self.url) or self.is_throttled(self.domain) or not self.is_allowed_by_user(self.url):
             print("     CrawlerProcessor: Request was not processed due to constraint")
+            self.cloud_integration.log_request( self.domain, url, self.constraint, self.instance_id )
             return False  # Indicate that URL was not processed due to constraints
         else:
             print( "     CrawlerProcessor: URL not have constraints")
 
         # Retrieve and process HTML content
-        self.retrieve_html(url)
+        await self.retrieve_html(url)
 
 
         self.get_metadata()
@@ -114,7 +121,17 @@ class CrawlerProcessor:
         # Placeholder for user checking logic
         return True
 
-    def retrieve_html(self, url):
+    async def get_response(self, url):
+        if self.crawler_settings[ "HTTP_PROVIDER" ] == "REQUESTS":
+            crawler = SyncRequests()
+            text, status_code = crawler.get_response( url )
+        else:
+            crawler = AsyncRequests()
+            text, status_code = await crawler.get_response( url)
+        return text, status_code
+
+
+    async def retrieve_html(self, url):
         """Retrieve HTML content and process it.
             g) Data Retrieval: If compliant, the corgi_crawler makes an HTTP request to retrieve the
             HTML document.
@@ -122,20 +139,23 @@ class CrawlerProcessor:
         self.cloud_integration.visit_domain(self.domain)
 
         try:
-            response = requests.get(url, timeout=5)
 
-            self.cloud_integration.log_request( self.domain, url, response.status_code )
-            if response.status_code == 200:
-                self.url_html = response.text
+            response_text, response_status_code = await self.get_response(url)
+
+            self.cloud_integration.log_request( self.domain, url, response_status_code,self.instance_id )
+
+            if response_status_code == 200:
+                self.url_html = response_text
                 print( "     CrawlerProcessor: HTML retrieved" )
             else:
-                print( response )
-                print( response.__dict__ )
+                print( response_text )
+                print( response_text.__dict__ )
                 self.constraint = "NoHTML"
                 print( "     CrawlerProcessor: HTML not retrieved" )
 
         except Exception as e:
-            self.cloud_integration.log_request(self.domain,url, "Timeout" )
+            print(e)
+            self.cloud_integration.log_request(self.domain, url, "Timeout", self.instance_id )
 
 
     def get_metadata(self):

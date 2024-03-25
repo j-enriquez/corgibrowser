@@ -63,7 +63,7 @@ class TestDemo(unittest.TestCase):
 
         # Test Queue Preference
         entity = self.cloud_integration.get_entity_from_table( "corgiwebqueuepreference", "bufferdata", "eluniversalcom" )
-        self.assertTrue(entity[ 'ItemsToPopFromQueue' ] == 1)
+        self.assertTrue(entity[ 'ItemsToPopFromQueue' ] == 5)
         self.assertTrue(entity[ 'VisibilityTimeout' ] == 18000)
 
 

@@ -29,6 +29,29 @@ class TestCrawler(unittest.TestCase):
         crawler.initialize()
         crawler.start()
 
+    def test_round_robin_distribution(self):
+        # Mock input simulating messages from different queues
+        queue_preferences = [
+            {"QueueName": "Q1", "Messages": [ {"id": 1}, {"id": 2}, {"id": 3} ]},
+            {"QueueName": "Q2", "Messages": [ {"id": 4}, {"id": 5}, {"id": 6} ]},
+            {"QueueName": "Q3", "Messages": [ {"id": 7}, {"id": 8} ]}
+        ]
 
+        # Simulate fetching and collecting all messages
+        all_messages = [ ]
+        for queue_pref in queue_preferences:
+            queue_name = queue_pref[ "QueueName" ]
+            for msg in queue_pref[ "Messages" ]:
+                msg[ "QueueName" ] = queue_name  # Add QueueName to each message
+                all_messages.append( msg )
+
+        # Distribute messages in round-robin order
+        distributed_messages = WebCrawler.distribute_round_robin( all_messages )
+
+        # Verify round-robin distribution
+        expected_queue_order = [ "Q1", "Q2", "Q3", "Q1", "Q2", "Q3", "Q1", "Q2" ]
+        actual_queue_order = [ msg[ "QueueName" ] for msg in distributed_messages ]
+
+        self.assertEqual( expected_queue_order, actual_queue_order, "Messages were not distributed in round-robin order" )
 
 

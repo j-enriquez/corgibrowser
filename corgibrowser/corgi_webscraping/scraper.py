@@ -1,9 +1,11 @@
 import time
 from .batch_scraper_processor import *
+from ..corgi_utils.names_generator import CorgiNameGenerator
 
 
 class Scraper:
     def __init__(self, cloud_integration, settings_manager=None, scraper_dict = {} ):
+        self.instance_id = CorgiNameGenerator.initialize_instance_id()
         self.scrapper_settings = settings_manager.SCRAPER
         self.cloud_integration = cloud_integration
         self.containers_to_visit = None
@@ -36,7 +38,8 @@ class Scraper:
                                                             container,
                                                             max_blobs_per_batch = self.scrapper_settings["MAX_BLOBS_PER_BATCH"],
                                                             scraper_dict=self.scraper_dict,
-                                                            visited_urls_hash = self.visited_urls_hash)
+                                                            visited_urls_hash = self.visited_urls_hash,
+                                                            instance_id = self.instance_id)
                     batchProcessor.initialize()
 
                 except Exception as e:
@@ -52,16 +55,10 @@ class Scraper:
 
         containers_to_visit = [ ]
 
-        for only_container in self.scrapper_settings[ "ONLY_DOMAINS" ]:
-            containers_to_visit.append( only_container )
-
-        for row in self.cloud_integration.get_entities_from_table( "corgiwebqueuepreference" ):
-
-            if self.scrapper_settings[ "ONLY_DOMAINS" ]:
-                if row[ "RowKey" ] not in self.scrapper_settings[ "ONLY_DOMAINS" ]:
-                    continue
-                else:
-                    containers_to_visit.append( row[ "RowKey" ] )
-            else:
+        if self.scrapper_settings[ "ONLY_DOMAINS" ]:
+            for only_container in self.scrapper_settings[ "ONLY_DOMAINS" ]:
+                containers_to_visit.append( only_container )
+        else:
+            for row in self.cloud_integration.get_entities_from_table( "corgiwebqueuepreference" ):
                 containers_to_visit.append( row[ "RowKey" ] )
         self.containers_to_visit = list( set( containers_to_visit ) )

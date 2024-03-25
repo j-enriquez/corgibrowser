@@ -3,6 +3,9 @@
 import re
 import urllib
 from urllib.parse import urlparse
+import uuid
+import socket
+from datetime import datetime
 
 class CorgiNameGenerator:
     @staticmethod
@@ -80,6 +83,20 @@ class CorgiNameGenerator:
         parsed_url = urlparse(url)
         print( f"     CrawlerProcessor: Domain for Url {parsed_url.netloc}" )
         return parsed_url.netloc
+
+    @staticmethod
+    def initialize_instance_id():
+
+        # Get the current hostname
+        hostname = socket.gethostname()
+        # Generate a timestamp
+        timestamp = datetime.now().strftime( "%Y%m%d%H%M%S" )
+        # Generate a random UUID
+        unique_id = uuid.uuid4()
+        # Combine them to form the instance ID
+        instance_id = f"{hostname}-{timestamp}-{unique_id}"
+        print( f"Instance ID: {instance_id}" )
+        return instance_id
 
 
 

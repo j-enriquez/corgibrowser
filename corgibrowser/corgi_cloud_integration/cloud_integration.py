@@ -24,7 +24,7 @@ class CloudIntegration:
     def initialize(self):
 
         # 1. Initialize System tables
-        for table_name in [ "corgiwebthrottling", "corgiwebsitemaps", "corgiwebrequestslog",
+        for table_name in [ "corgiwebthrottling", "corgiwebsitemaps", "corgiwebrequestslog", "corgiwebscrapelog",
                             "corgiwebqueuepreference", "corgiwebhashtable" ]:
             self.cloud_direct_operations.create_and_get_table( table_name )
 
@@ -55,7 +55,7 @@ class CloudIntegration:
         self.cloud_direct_operations.create_and_get_container( container_table_queue_name )
 
         # 3. Add message to Queue Preference Table
-        self.add_domain_to_queue_preference_table(container_table_queue_name=container_table_queue_name, items_to_pop_from_queue=1, visibility_timeout=5 * 60 * 60)
+        self.add_domain_to_queue_preference_table(container_table_queue_name=container_table_queue_name, items_to_pop_from_queue=5, visibility_timeout=5 * 60 * 60)
 
         # 4. Add message to dedicated Queue
         message = CorgiWebMessageSchemaVersion1( toVisitUrl = url, originalDomain = url, originalUrl = url,
@@ -63,8 +63,6 @@ class CloudIntegration:
         self.cloud_direct_operations.upsert_to_queue( queue_name = container_table_queue_name,
                                                       message = message.to_json(), visibility_timeout = 0,
                                                       time_to_live = None )
-        self.cloud_direct_operations.upsert_to_queue( queue_name = "corgiweb", message = message.to_json(),
-                                                      visibility_timeout = 0, time_to_live = None )
 
     def list_containers(self, ):
         return self.cloud_direct_operations.list_containers()
@@ -144,7 +142,7 @@ class CloudIntegration:
 
         self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling", row = entity )
 
-    def log_request(self, domain, url, status_code):
+    def log_request(self, domain, url, status_code,instance_id):
         utc_now = datetime.datetime.utcnow()
         row_key = utc_now.strftime( '%Y%m%dT%H%M%SZ' )
 
@@ -152,10 +150,25 @@ class CloudIntegration:
             "PartitionKey": domain,
             "RowKey": row_key,
             "Url": url,
-            "StatusCode": status_code
+            "StatusCode": status_code,
+            "InstanceId" : instance_id
         }
-
+        print(entity)
         self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebrequestslog", row = entity )
+
+    def log_request_scrape(self, domain, url, status_code,instance_id):
+        utc_now = datetime.datetime.utcnow()
+        row_key = utc_now.strftime( '%Y%m%dT%H%M%SZ' )
+
+        entity = {
+            "PartitionKey": domain,
+            "RowKey": row_key,
+            "Url": url,
+            "StatusCode": status_code,
+            "InstanceId" : instance_id
+        }
+        print(entity)
+        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebscrapelog", row = entity )
 
     def upload_to_blob(self, data, container_name, blob_name, metadata=None, container_suffix = ""):
         container_name = CorgiNameGenerator.get_container_compatible_name(CorgiNameGenerator.get_storage_compatible_name( container_name ) + container_suffix)

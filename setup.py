@@ -8,7 +8,7 @@ with open('requirements.txt', encoding='utf-8') as f:
 
 setuptools.setup(
     name="corgibrowser",
-    version="0.0.2",
+    version="0.0.3",
     author="Jose Enriquez",
     author_email="joseaenriqueza@hotmail.com",
     description="Corgi Browser",

@@ -30,7 +30,8 @@ class SettingsManager:
             "CRAWLER_CYCLES_COUNT" : 1000000,
             "ENABLE_CORGIWEB_QUEUE": True,
             "CORGIWEB_QUEUE_ITEMS_TO_POP": 30,
-            "CRAWLER_URLS_TO_VISIT": 1000000
+            "CRAWLER_URLS_TO_VISIT": 1000000,
+            "HTTP_PROVIDER":"aiohttp"
         }
 
     def load_scraper_settings(self,):

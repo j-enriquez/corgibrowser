@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 
 class BatchScraperProcessor:
-    def __init__(self, cloud_integration,scraper_settings, container_name, max_blobs_per_batch = 100,scraper_dict={},visited_urls_hash=set()):
+    def __init__(self, cloud_integration,scraper_settings, container_name, max_blobs_per_batch = 100,scraper_dict={},visited_urls_hash=set(),instance_id=""):
         self.cloud_integration = cloud_integration
         self.scraper_settings = scraper_settings
         self.original_container_name = container_name
@@ -23,6 +23,7 @@ class BatchScraperProcessor:
         self.robots_cache = RobotsCache()
         self.scraper_dict = scraper_dict
         self.visited_urls_hash = visited_urls_hash
+        self.instance_id = instance_id
 
     def get_left_side(self,string):
         left_side = string.split( '-' )[ 0 ] if '-' in string else string
@@ -67,6 +68,8 @@ class BatchScraperProcessor:
                 if self.get_left_side( self.container_name ) != self.original_container_name:
                     print("delete old blob")
                     self.cloud_integration.delete_blob_from_container( container_name = self.original_container_name, blob_name = blob )
+
+                self.cloud_integration.log_request_scrape( self.container_name, blob, "SCRAPED", self.instance_id )
             except Exception as e:
                 print("error",e)
                 errors_count += 1
@@ -158,7 +161,6 @@ class BatchScraperProcessor:
 
         errors_count = 0
         for new_url in validated_urls:
-            print("processing",new_url)
             # Add Urls to the corgiWeb Table
 
             try:
@@ -172,7 +174,6 @@ class BatchScraperProcessor:
                     continue
 
                 # 2. Upsert record in domain partition
-                print( "tablerow", tableRow.__dict__ )
                 value_exists = self.cloud_integration.upsert_url_info_to_table(table_name = tableRow.TableName,entity = tableRow )
                 if value_exists:
                     continue
