@@ -9,7 +9,7 @@ class DataSetsManager:
             urls = [ ]  # List to aggregate all URLs
 
             # Define the package name where modules are located
-            package_name = 'newspapers.usa'
+            package_name = 'corgibrowser.corgi_datasets.newspapers.usa'
 
             # Import the package
             package = importlib.import_module( package_name )
