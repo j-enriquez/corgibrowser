@@ -35,6 +35,7 @@ PipLibrary*
 build/
 corgibrowser.egg-info/
 user/joseenriquez*
+corgibrowser/corgi_social_media*
 
 # Local python packages
 .python_packages/
