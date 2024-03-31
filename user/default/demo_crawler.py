@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from corgibrowser.corgi_cloud_integration.cloud_integration import CloudIntegration
+from corgibrowser.corgi_datasets.DataSetsManager import DataSetsManager
 from corgibrowser.corgi_settings.SettingsManager import SettingsManager
 from corgibrowser.corgi_crawler.crawler import *
 
@@ -16,10 +17,7 @@ cloud_integration = CloudIntegration( settings_manager = settings_manager )
 cloud_integration.initialize()
 
 # Add Initial URLs
-for url in ["https://www.cnn.com/",
-        "https://chicago.suntimes.com/",
-        "https://www.chicagotribune.com/",
-        "https://www.csmonitor.com/"]:
+for url in DataSetsManager.load_usa_newspaper_urls():
     cloud_integration.add_url_to_queue(url)
 
 # Crawl

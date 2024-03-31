@@ -1,5 +1,4 @@
 import os
-import sys
 from dotenv import load_dotenv
 from corgibrowser.corgi_cloud_integration.cloud_integration import CloudIntegration
 from corgibrowser.corgi_settings.SettingsManager import SettingsManager
