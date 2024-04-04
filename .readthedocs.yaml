@@ -1,14 +1,14 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
-version: 1
+version: 2
 formats: all
 sphinx:
   configuration: docs/conf.py
 build:
   os: ubuntu-20.04
   tools:
-    python: "3.11" 
+    python: "3.11"
 
 python:
   install:
