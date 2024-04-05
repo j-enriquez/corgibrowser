@@ -2,6 +2,11 @@
 
 CorgiBrowser is an open-source Python framework focused at simplifying the process of web crawling and scraping. Built with scalability, efficiency, and ethical data collection in mind, it is designed for researchers, developers, and analysts who require robust data acquisition capabilities.
 
+
+## Documentation
+
+readthedocs.org/projects/corgibrowser/
+
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -97,11 +102,7 @@ scraper.start()
 
 ## Demos
 
-Link to demo applications and tutorials.
-
-## Documentation
-
-Documentation
+[Link to demo applications and tutorials.](https://github.com/j-enriquez/corgibrowser/tree/main/user)
 
 ## Background
 
