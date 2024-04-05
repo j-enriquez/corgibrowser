@@ -2,6 +2,9 @@ from azure.identity import DefaultAzureCredential
 from corgibrowser.corgi_cloud_integration.azure_direct_operations import AzureDirectOperations
 from corgibrowser.corgi_cloud_integration.queues_schemas.corgi_web_queue_version_1 import CorgiWebMessageSchemaVersion1
 from corgibrowser.corgi_cloud_integration.tables.corgi_hash_table import CorgiHashTable
+from corgibrowser.corgi_cloud_integration.tables.corgi_web_request_log import CorgiWebRequestLog
+from corgibrowser.corgi_cloud_integration.tables.corgi_web_scrape_log import CorgiWebScrapeLog
+from corgibrowser.corgi_cloud_integration.tables.corgi_web_trottling import CorgiWebThrottling
 from corgibrowser.corgi_cloud_integration.tables.corgiweb_queuepreference import CorgiWebQueuePreference
 import urllib.parse
 import datetime
@@ -99,76 +102,47 @@ class CloudIntegration:
         self.upload_to_blob(data, "corgirobotscache", CorgiNameGenerator.get_storage_compatible_name(blob_name))
 
     def update_visit_rate(self, domain, rate):
-
         if rate:
-            partition_key = "RateLimit"
-            row_key = domain
-
-            entity = {
-                "PartitionKey": partition_key,
-                "RowKey": row_key,
-                "ThrottlingLimitSeconds": int( rate )
-            }
-
-            self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling", row = entity )
+            throttling_entity = CorgiWebThrottling( domain, rate )
+            print( throttling_entity.to_dict() )
+            self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling",
+                                                          row = throttling_entity.to_dict() )
 
     def can_process_domain(self, domain):
-
         entity = self.cloud_direct_operations.get_entity_from_table( table_name = "corgiwebthrottling",
                                                                      partition_key = "RateLimit", row_key = domain )
         if entity:
-            last_access_time = entity._metadata[ 'timestamp' ].replace( tzinfo = None )
-
-            if (datetime.datetime.utcnow() - last_access_time) < timedelta(
-                    seconds = entity[ 'ThrottlingLimitSeconds' ] ):
+            throttling_info = CorgiWebThrottling.from_entity( entity )
+            if (datetime.datetime.utcnow() - throttling_info.LastAccessTime) < timedelta(
+                    seconds = throttling_info.ThrottlingLimitSeconds ):
                 print( f"Not Allowed to visit {domain}" )
                 return False
         else:
-            entity = {
-                "PartitionKey": "RateLimit",
-                "RowKey": domain,
-                "ThrottlingLimitSeconds": 1
-            }
-            self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling", row = entity )
+            # If no entity is found, create a new one with a default throttling limit of 1 second
+            new_throttling_info = CorgiWebThrottling( domain, 1 )
+            self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling",
+                                                          row = new_throttling_info.to_dict() )
 
         return True
 
     def visit_domain(self, domain):
-        entity = {
-            "PartitionKey": "RateLimit",
-            "RowKey": domain,
-            "ThrottlingLimitSeconds": 1
-        }
+        # Create a new instance of CorgiWebThrottling with a default throttling limit of 1 second
+        throttling_info = CorgiWebThrottling( domain, 1 )
 
-        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling", row = entity )
+        # Use the to_dict method to convert the instance to a dictionary suitable for the database operation
+        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebthrottling",
+                                                      row = throttling_info.to_dict() )
 
-    def log_request(self, domain, url, status_code,instance_id):
-        utc_now = datetime.datetime.utcnow()
-        row_key = utc_now.strftime( '%Y%m%dT%H%M%SZ' )
+    def log_request(self, domain, url, status_code, instance_id):
+        web_request_log = CorgiWebRequestLog( domain, url, status_code, instance_id )
+        print( web_request_log.to_dict() )
+        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebrequestslog",
+                                                      row = web_request_log.to_dict() )
 
-        entity = {
-            "PartitionKey": domain,
-            "RowKey": row_key,
-            "Url": url,
-            "StatusCode": status_code,
-            "InstanceId" : instance_id
-        }
-        print(entity)
-        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebrequestslog", row = entity )
-
-    def log_request_scrape(self, domain, url, status_code,instance_id):
-        utc_now = datetime.datetime.utcnow()
-        row_key = utc_now.strftime( '%Y%m%dT%H%M%SZ' )
-
-        entity = {
-            "PartitionKey": domain,
-            "RowKey": row_key,
-            "Url": url,
-            "StatusCode": status_code,
-            "InstanceId" : instance_id
-        }
-        print(entity)
-        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebscrapelog", row = entity )
+    def log_request_scrape(self, domain, url, status_code, instance_id):
+        web_scrape_log = CorgiWebScrapeLog( domain, url, status_code, instance_id )
+        print( web_scrape_log.to_dict() )
+        self.cloud_direct_operations.upsert_to_table( table_name = "corgiwebscrapelog", row = web_scrape_log.to_dict() )
 
     def upload_to_blob(self, data, container_name, blob_name, metadata=None, container_suffix = ""):
         container_name = CorgiNameGenerator.get_container_compatible_name(CorgiNameGenerator.get_storage_compatible_name( container_name ) + container_suffix)

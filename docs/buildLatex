@@ -1,0 +1,6 @@
+cd docs/_build/latex
+make all-pdf
+pdflatex corgibrowser.tex
+
+
+sphinx-build -b html . _build/html

@@ -1,3 +1,4 @@
+# docs/conf.py
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information

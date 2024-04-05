@@ -22,8 +22,6 @@ class SettingsManager:
     def load_crawler_settings(self,):
 
         self.settings["CRAWLER"] = {
-            "ADD_NEW_URLS_TO_TABLE": True,
-            "ADD_NEW_URLS_TO_QUEUE": True,
             "PROCESS_VISITED_URL": True,
             "CRAWLER_SLEEP_IN_SECONDS": 20,
             "QUEUE_ONLY_DOMAINS": [],

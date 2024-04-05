@@ -36,6 +36,7 @@ build/
 corgibrowser.egg-info/
 user/joseenriquez*
 corgibrowser/corgi_social_media*
+_build/
 
 # Local python packages
 .python_packages/
