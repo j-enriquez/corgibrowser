@@ -5,7 +5,7 @@ CorgiBrowser is an open-source Python framework focused at simplifying the proce
 
 ## Documentation
 
-[readthedocs.org/projects/corgibrowser/](https://readthedocs.org/projects/corgibrowser/)
+[CorgiBrowser’s Documentation](https://corgibrowser.readthedocs.io/en/latest/index.html)
 
 ## Table of Contents
 
