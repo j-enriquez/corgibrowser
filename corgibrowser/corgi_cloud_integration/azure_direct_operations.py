@@ -24,28 +24,25 @@ class AzureDirectOperations:
         self.refresh_credentials()
 
     def refresh_credentials(self):
+        refresh_interval = datetime.timedelta(minutes=5)
+        if self.last_refresh and (datetime.datetime.now() - self.last_refresh < refresh_interval):
+            return  # Return early if the refresh interval hasn't passed yet
+        self.last_refresh = datetime.datetime.now()
 
-        refresh_interval = datetime.timedelta( minutes = 5 )
-        if self.last_refresh:
-            if datetime.datetime.now() - self.last_refresh > refresh_interval:
-                self.last_refresh = datetime.datetime.now()
-            else:
-                return
-        else:
-            self.last_refresh = datetime.datetime.now()
+        # Connection string for Azurite
+        connection_string = (
+            "AccountName=devstoreaccount1;"
+            "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;"
+            "DefaultEndpointsProtocol=http;"
+            "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+            "QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
+            "TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;"
+        )
 
-        if self.config[ 'USE_AZURE_STORAGE_ACCOUNT_KEY' ]:
-            storage_account_name = self.config[ 'AZURE_STORAGE_ACCOUNT_NAME' ]
-            storage_account_key = self.config[ 'AZURE_STORAGE_ACCOUNT_KEY' ]
-
-            connection_string = f"DefaultEndpointsProtocol=https;AccountName={storage_account_name};AccountKey={storage_account_key};EndpointSuffix=core.windows.net"
-
-            self.blob_service_client = BlobServiceClient.from_connection_string( connection_string )
-            self.table_service_client = TableServiceClient.from_connection_string( connection_string )
-            self.queue_service_client = QueueServiceClient.from_connection_string( connection_string )
-        else:
-            raise
-
+        # Create service clients from the connection string
+        self.blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        self.table_service_client = TableServiceClient.from_connection_string(connection_string)
+        self.queue_service_client = QueueServiceClient.from_connection_string(connection_string)
         self.last_refresh = datetime.datetime.now()
 
 
